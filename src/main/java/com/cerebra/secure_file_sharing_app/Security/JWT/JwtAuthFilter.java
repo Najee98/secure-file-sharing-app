@@ -18,8 +18,6 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
-//OncePerRequestFilter indicates that the JwtAuthFilter will intercept every request,
-//meaning that the JwtAuthFilter will be activated on each request
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;

@@ -7,13 +7,12 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.SecretKey;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
-
-import static com.cerebra.secure_file_sharing_app.Security.SecurityUtils.getSignInKey;
 
 @Service
 public class JwtService {
@@ -24,7 +23,7 @@ public class JwtService {
         try {
             SECRET_KEY = SecurityUtils.secretKey();
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to generate JWT secret key", e);
         }
     }
 
@@ -40,15 +39,14 @@ public class JwtService {
     private Claims extractAllClaims(String token){
         return Jwts
                 .parser()
-                .setSigningKey(getSignInKey(SECRET_KEY))
+                .setSigningKey(getSignInKey())
                 .parseClaimsJws(token)
                 .getBody();
     }
 
-//    private Key getSignInKey() {
-//        byte[] keyBytes = Base64.getDecoder().decode(SECRET_KEY);
-//        return Keys.hmacShaKeyFor(keyBytes);
-//    }
+    private SecretKey getSignInKey() {
+        return SecurityUtils.getSignInKey(SECRET_KEY);
+    }
 
     public String generateToken(UserDetails userDetails){
         return generateToken(new HashMap<>(), userDetails);
@@ -63,8 +61,8 @@ public class JwtService {
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 24))
-                .signWith(SignatureAlgorithm.HS256, getSignInKey(SECRET_KEY))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24 hours
+                .signWith(SignatureAlgorithm.HS256, getSignInKey())
                 .compact();
     }
 

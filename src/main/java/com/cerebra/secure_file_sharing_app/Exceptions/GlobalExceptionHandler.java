@@ -1,7 +1,7 @@
-package com.cerebra.secure_file_sharing_app.Shared.ExceptionHandling;
+package com.cerebra.secure_file_sharing_app.Exceptions;
 
-import com.cerebra.secure_file_sharing_app.Shared.ExceptionHandling.CustomExceptions.AuthenticationException;
-import com.cerebra.secure_file_sharing_app.Shared.ExceptionHandling.CustomExceptions.ResourceNotFoundException;
+import com.cerebra.secure_file_sharing_app.Exceptions.CustomExceptions.AuthenticationException;
+import com.cerebra.secure_file_sharing_app.Exceptions.CustomExceptions.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;

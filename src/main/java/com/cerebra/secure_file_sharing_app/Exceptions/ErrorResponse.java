@@ -1,4 +1,4 @@
-package com.cerebra.secure_file_sharing_app.Shared.ExceptionHandling;
+package com.cerebra.secure_file_sharing_app.Exceptions;
 
 import lombok.Data;
 

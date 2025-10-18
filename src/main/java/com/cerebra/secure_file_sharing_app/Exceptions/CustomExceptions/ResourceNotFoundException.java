@@ -1,4 +1,4 @@
-package com.cerebra.secure_file_sharing_app.Shared.ExceptionHandling.CustomExceptions;
+package com.cerebra.secure_file_sharing_app.Exceptions.CustomExceptions;
 
 public class ResourceNotFoundException extends RuntimeException {
 
