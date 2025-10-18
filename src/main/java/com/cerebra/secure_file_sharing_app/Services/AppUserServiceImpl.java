@@ -14,39 +14,34 @@ import java.util.Optional;
 public class AppUserServiceImpl implements AppUserService {
     
     private final AppUserRepository appUserRepository;
-    
+
     @Override
     public AppUser save(AppUser appUser) {
-        // TODO: Implement
-        return null;
+        return appUserRepository.save(appUser);
     }
-    
-    @Override
-    public Optional<AppUser> findById(Long id) {
-        // TODO: Implement
-        return Optional.empty();
-    }
-    
+
     @Override
     public Optional<AppUser> findByPhoneNumber(String phoneNumber) {
-        // TODO: Implement
-        return Optional.empty();
+        return appUserRepository.findByPhoneNumber(phoneNumber);
     }
-    
+
+    @Override
+    public Optional<AppUser> findById(Long id) {
+        return appUserRepository.findById(id);
+    }
+
     @Override
     public List<AppUser> findAll() {
-        // TODO: Implement
-        return null;
+        return appUserRepository.findAll();
     }
-    
+
     @Override
     public void deleteById(Long id) {
-        // TODO: Implement
+        appUserRepository.deleteById(id);
     }
-    
+
     @Override
     public boolean existsByPhoneNumber(String phoneNumber) {
-        // TODO: Implement
-        return false;
+        return appUserRepository.existsByPhoneNumber(phoneNumber);
     }
 }

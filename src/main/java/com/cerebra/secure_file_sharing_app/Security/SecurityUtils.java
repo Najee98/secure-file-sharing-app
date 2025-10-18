@@ -25,6 +25,6 @@ public class SecurityUtils {
 
     public static SecretKey getSignInKey(String encodedKey) {
         byte[] decodedKey = Base64.getDecoder().decode(encodedKey);
-        return new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
+        return new SecretKeySpec(decodedKey, 0, decodedKey.length, "HmacSHA256");
     }
 }

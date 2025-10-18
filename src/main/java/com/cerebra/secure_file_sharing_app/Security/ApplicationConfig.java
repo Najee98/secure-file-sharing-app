@@ -23,10 +23,10 @@ public class ApplicationConfig {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with phone: " + phoneNumber));
     }
 
-    @Bean
-    public AuthenticationProvider authenticationProvider(){
-        return new OTPAuthenticationProvider();
-    }
+//    @Bean
+//    public AuthenticationProvider authenticationProvider(){
+//        return new OTPAuthenticationProvider();
+//    }
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {

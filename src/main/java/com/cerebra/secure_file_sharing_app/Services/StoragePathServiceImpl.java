@@ -14,33 +14,29 @@ import java.util.Optional;
 public class StoragePathServiceImpl implements StoragePathService {
     
     private final StoragePathRepository storagePathRepository;
-    
+
     @Override
     public StoragePath save(StoragePath storagePath) {
-        // TODO: Implement
-        return null;
+        return storagePathRepository.save(storagePath);
     }
-    
+
     @Override
     public Optional<StoragePath> findById(Long id) {
-        // TODO: Implement
-        return Optional.empty();
+        return storagePathRepository.findById(id);
     }
-    
+
     @Override
     public Optional<StoragePath> findByAppUserId(Long appUserId) {
-        // TODO: Implement
-        return Optional.empty();
+        return storagePathRepository.findByAppUserId(appUserId);
     }
-    
+
     @Override
     public List<StoragePath> findAll() {
-        // TODO: Implement
-        return null;
+        return storagePathRepository.findAll();
     }
-    
+
     @Override
     public void deleteById(Long id) {
-        // TODO: Implement
+        storagePathRepository.deleteById(id);
     }
 }
