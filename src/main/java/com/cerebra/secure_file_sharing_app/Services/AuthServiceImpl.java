@@ -49,7 +49,7 @@ public class AuthServiceImpl implements AuthService {
             
             if (smsResponse.isSuccess()) {
                 log.info("OTP sent successfully to: {}", phoneNumber);
-                return OTPResponse.success(phoneNumber, expiresAt);
+                return OTPResponse.success(phoneNumber, expiresAt, otp);
             } else {
                 log.error("Failed to send SMS to {}: {}", phoneNumber, smsResponse.getMessage());
                 otpStorage.remove(phoneNumber); // Clean up on SMS failure

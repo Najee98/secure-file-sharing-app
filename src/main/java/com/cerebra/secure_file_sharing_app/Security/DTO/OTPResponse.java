@@ -16,7 +16,10 @@ public class OTPResponse {
     
     @Schema(description = "Success status", example = "true")
     private boolean success;
-    
+
+    @Schema(description = "OTP", example = "123456")
+    private String otp;
+
     @Schema(description = "Response message", example = "OTP sent successfully")
     private String message;
     
@@ -26,9 +29,10 @@ public class OTPResponse {
     @Schema(description = "OTP expiration time")
     private LocalDateTime expiresAt;
     
-    public static OTPResponse success(String phoneNumber, LocalDateTime expiresAt) {
+    public static OTPResponse success(String phoneNumber, LocalDateTime expiresAt, String otp) {
         return OTPResponse.builder()
                 .success(true)
+                .otp(otp)
                 .message("OTP sent successfully")
                 .phoneNumber(phoneNumber)
                 .expiresAt(expiresAt)
