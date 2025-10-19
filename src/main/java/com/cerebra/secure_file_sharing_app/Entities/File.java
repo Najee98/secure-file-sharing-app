@@ -1,5 +1,6 @@
 package com.cerebra.secure_file_sharing_app.Entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -40,11 +41,13 @@ public class File {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "storage_path_id", nullable = false)
     @ToString.Exclude
+    @JsonIgnore
     private StoragePath storagePath;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "folder_id")
     @ToString.Exclude
+    @JsonIgnore
     private Folder folder;
     
     @OneToMany(mappedBy = "file", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

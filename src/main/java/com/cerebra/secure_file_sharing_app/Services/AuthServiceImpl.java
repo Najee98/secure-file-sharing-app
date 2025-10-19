@@ -1,6 +1,7 @@
 package com.cerebra.secure_file_sharing_app.Services;
 
 import com.cerebra.secure_file_sharing_app.Entities.AppUser;
+import com.cerebra.secure_file_sharing_app.Entities.Folder;
 import com.cerebra.secure_file_sharing_app.Entities.StoragePath;
 import com.cerebra.secure_file_sharing_app.Exceptions.CustomExceptions.InvalidOTPException;
 import com.cerebra.secure_file_sharing_app.Exceptions.CustomExceptions.OTPExpiredException;
@@ -26,7 +27,8 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final AppUserService appUserService;
     private final StoragePathService storagePathService;
-    
+    private final FolderService folderService;
+
     // In-memory OTP storage - consider Redis for production
     private final Map<String, OTPSession> otpStorage = new ConcurrentHashMap<>();
     private final Random random = new Random();
@@ -103,22 +105,29 @@ public class AuthServiceImpl implements AuthService {
     private String generateOTP() {
         return String.format("%06d", random.nextInt(1000000));
     }
-    
+
     private AppUser createNewUser(String phoneNumber) {
         log.info("Creating new user for phone number: {}", phoneNumber);
-        
+
         // Create user
         AppUser newUser = appUserService.save(AppUser.builder()
                 .phoneNumber(phoneNumber)
                 .build());
-        
+
         // Create storage path for user
-        String basePath = "/app-storage/users/user" + newUser.getId();
-        storagePathService.save(StoragePath.builder()
+        String basePath = "/users/user" + newUser.getId();
+        StoragePath storagePath = storagePathService.save(StoragePath.builder()
                 .basePath(basePath)
                 .appUser(newUser)
                 .build());
-        
+
+        // Create default root folder for user
+        folderService.save(Folder.builder()
+                .name("My Files")  // Default folder name
+                .storagePath(storagePath)
+                .parentFolder(null)  // Root level folder
+                .build());
+
         return newUser;
     }
     

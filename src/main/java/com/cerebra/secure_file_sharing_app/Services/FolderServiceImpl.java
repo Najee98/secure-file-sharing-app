@@ -9,50 +9,59 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
+import com.cerebra.secure_file_sharing_app.Entities.StoragePath;
+import com.cerebra.secure_file_sharing_app.Services.StoragePathService;
+import com.cerebra.secure_file_sharing_app.Exceptions.CustomExceptions.*;
+import lombok.extern.slf4j.Slf4j;
+
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class FolderServiceImpl implements FolderService {
     
     private final FolderRepository folderRepository;
-    
+    private final StoragePathService storagePathService;
+
+
     @Override
     public Folder save(Folder folder) {
-        // TODO: Implement
-        return null;
+        return folderRepository.save(folder);
     }
     
     @Override
     public Optional<Folder> findById(Long id) {
-        // TODO: Implement
-        return Optional.empty();
+        return folderRepository.findById(id);
     }
     
     @Override
     public List<Folder> findByStoragePathId(Long storagePathId) {
-        // TODO: Implement
-        return null;
+        return folderRepository.findByStoragePathId(storagePathId);
     }
     
     @Override
     public List<Folder> findByParentFolderId(Long parentFolderId) {
-        // TODO: Implement
-        return null;
+        return folderRepository.findByParentFolderId(parentFolderId);
     }
     
     @Override
     public List<Folder> findRootFolders(Long storagePathId) {
-        // TODO: Implement
-        return null;
+        return folderRepository.findByStoragePathIdAndParentFolderIsNull(storagePathId);
     }
     
     @Override
     public List<Folder> findAll() {
-        // TODO: Implement
-        return null;
+        return folderRepository.findAll();
     }
     
     @Override
     public void deleteById(Long id) {
-        // TODO: Implement
+        folderRepository.deleteById(id);
     }
+
+    @Override
+    public List<Folder> findByStoragePathIdAndParentFolderIsNull(Long id) {
+        return folderRepository.findByStoragePathIdAndParentFolderIsNull(id);
+    }
+
+
 }

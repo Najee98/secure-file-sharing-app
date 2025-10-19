@@ -86,13 +86,17 @@ public class FileServiceImpl implements FileService {
         // Validate file
         validateFile(multipartFile);
 
-        // Get user's storage path
+        // Get user's storage path (this validates user has storage)
         StoragePath storagePath = getUserStoragePath(userId);
 
-        // Validate folder access if specified
-        Folder targetFolder = null;
+        // Handle folder logic
+        Folder targetFolder;
         if (folderId != null) {
+            // Use specified folder (with validation)
             targetFolder = validateFolderAccess(folderId, userId);
+        } else {
+            // Create or get default folder
+            targetFolder = getOrCreateDefaultFolder(storagePath);
         }
 
         try {
@@ -261,6 +265,22 @@ public class FileServiceImpl implements FileService {
         if (!file.getStoragePath().getId().equals(userStoragePath.getId())) {
             throw new FileAccessDeniedException("Access denied to file: " + file.getId());
         }
+    }
+
+    private Folder getOrCreateDefaultFolder(StoragePath storagePath) {
+        // Try to find existing default folder
+        List<Folder> rootFolders = folderService.findByStoragePathIdAndParentFolderIsNull(storagePath.getId());
+
+        if (!rootFolders.isEmpty()) {
+            return rootFolders.get(0);  // Use first root folder
+        }
+
+        // Create default folder if none exists
+        return folderService.save(Folder.builder()
+                .name("My Files")
+                .storagePath(storagePath)
+                .parentFolder(null)
+                .build());
     }
 
 }

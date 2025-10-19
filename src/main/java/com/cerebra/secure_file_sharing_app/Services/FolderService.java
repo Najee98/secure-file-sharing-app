@@ -14,4 +14,7 @@ public interface FolderService {
     List<Folder> findRootFolders(Long storagePathId);
     List<Folder> findAll();
     void deleteById(Long id);
+
+    List<Folder> findByStoragePathIdAndParentFolderIsNull(Long id);
+    
 }
