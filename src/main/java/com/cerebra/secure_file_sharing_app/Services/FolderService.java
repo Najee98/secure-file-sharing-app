@@ -16,5 +16,9 @@ public interface FolderService {
     void deleteById(Long id);
 
     List<Folder> findByStoragePathIdAndParentFolderIsNull(Long id);
-    
+
+    Folder createFolder(String name, Long parentFolderId, Long userId);
+    void deleteFolder(Long folderId, Long userId);
+    boolean hasAccess(Long folderId, Long userId);
+    boolean isValidFolderName(String name);
 }
