@@ -86,37 +86,32 @@ public class SharedLinkController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/public/shared")
-    @Operation(
-            summary = "Download shared file by URL",
-            description = "Download a file using the complete shared URL or just the token."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "File downloaded successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid URL format"),
-            @ApiResponse(responseCode = "404", description = "Invalid or expired share link")
-    })
-    public ResponseEntity<Resource> downloadSharedFileByUrl(
-            @Parameter(description = "Complete shared URL or token", required = true,
-                    example = "http://localhost:8080/public/shared/abc-123-def-456")
-            @RequestParam("url") String shareUrlOrToken) {
+    @GetMapping("/public/shared/{linkToken}")
+    public ResponseEntity<Resource> downloadSharedFile(@PathVariable String linkToken) {
 
-        log.info("Public download request by URL: {}", shareUrlOrToken);
-
-        // Extract token from URL or use as token directly
-        String linkToken = extractTokenFromUrl(shareUrlOrToken);
+        log.info("Public download request for token: {}", linkToken);
 
         Resource resource = sharedLinkService.downloadSharedFile(linkToken);
 
-        // Get share details for filename
+        // Get share details
         SharedLink sharedLink = sharedLinkService.findByLinkToken(linkToken)
                 .orElseThrow(() -> new RuntimeException("Share not found"));
 
-        String filename = sharedLink.getFile() != null ?
-                sharedLink.getFile().getDisplayName() : "shared-file";
+        String filename;
+        String mimeType;
 
-        String mimeType = sharedLink.getFile() != null ?
-                sharedLink.getFile().getMimeType() : MediaType.APPLICATION_OCTET_STREAM_VALUE;
+        if (sharedLink.getFile() != null) {
+            // File download
+            filename = sharedLink.getFile().getDisplayName();
+            mimeType = sharedLink.getFile().getMimeType();
+        } else if (sharedLink.getFolder() != null) {
+            // Folder download (ZIP)
+            filename = sharedLink.getFolder().getName() + ".zip";
+            mimeType = "application/zip";  // Correct MIME type for ZIP files
+        } else {
+            filename = "shared-item";
+            mimeType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
+        }
 
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(mimeType))
@@ -124,34 +119,33 @@ public class SharedLinkController {
                 .body(resource);
     }
 
+    @GetMapping("/public/shared")
+    public ResponseEntity<Resource> downloadSharedFileByUrl(@RequestParam("url") String shareUrlOrToken) {
 
-    @GetMapping("/public/shared/{linkToken}")
-    @Operation(
-            summary = "Download shared file",
-            description = "Download a file using a shared link. No authentication required."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "File downloaded successfully"),
-            @ApiResponse(responseCode = "404", description = "Invalid or expired share link"),
-            @ApiResponse(responseCode = "410", description = "Share link has expired")
-    })
-    public ResponseEntity<Resource> downloadSharedFile(
-            @Parameter(description = "Share link token", required = true)
-            @PathVariable String linkToken) {
+        log.info("Public download request by URL: {}", shareUrlOrToken);
 
-        log.info("Public download request: {}", linkToken);
-
+        String linkToken = extractTokenFromUrl(shareUrlOrToken);
         Resource resource = sharedLinkService.downloadSharedFile(linkToken);
 
-        // Get share details for filename
+        // Get share details
         SharedLink sharedLink = sharedLinkService.findByLinkToken(linkToken)
                 .orElseThrow(() -> new RuntimeException("Share not found"));
 
-        String filename = sharedLink.getFile() != null ?
-                sharedLink.getFile().getDisplayName() : "shared-file";
+        String filename;
+        String mimeType;
 
-        String mimeType = sharedLink.getFile() != null ?
-                sharedLink.getFile().getMimeType() : MediaType.APPLICATION_OCTET_STREAM_VALUE;
+        if (sharedLink.getFile() != null) {
+            // File download
+            filename = sharedLink.getFile().getDisplayName();
+            mimeType = sharedLink.getFile().getMimeType();
+        } else if (sharedLink.getFolder() != null) {
+            // Folder download (ZIP)
+            filename = sharedLink.getFolder().getName() + ".zip";
+            mimeType = "application/zip";  // Correct MIME type for ZIP files
+        } else {
+            filename = "shared-item";
+            mimeType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
+        }
 
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(mimeType))
