@@ -1,4 +1,4 @@
-package com.cerebra.secure_file_sharing_app.SMS.DTO;
+package com.cerebra.secure_file_sharing_app.Shared;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

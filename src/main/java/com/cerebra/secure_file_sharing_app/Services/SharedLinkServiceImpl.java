@@ -6,7 +6,6 @@ import com.cerebra.secure_file_sharing_app.Entities.SharedLink;
 import com.cerebra.secure_file_sharing_app.Entities.StoragePath;
 import com.cerebra.secure_file_sharing_app.Exceptions.CustomExceptions.*;
 import com.cerebra.secure_file_sharing_app.Repositories.SharedLinkRepository;
-import com.cerebra.secure_file_sharing_app.SMS.SMSService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

@@ -5,7 +5,6 @@ import com.cerebra.secure_file_sharing_app.Entities.Folder;
 import com.cerebra.secure_file_sharing_app.Entities.StoragePath;
 import com.cerebra.secure_file_sharing_app.Exceptions.CustomExceptions.InvalidOTPException;
 import com.cerebra.secure_file_sharing_app.Exceptions.CustomExceptions.OTPExpiredException;
-import com.cerebra.secure_file_sharing_app.SMS.SMSService;
 import com.cerebra.secure_file_sharing_app.Security.DTO.AuthResponse;
 import com.cerebra.secure_file_sharing_app.Security.DTO.OTPResponse;
 import com.cerebra.secure_file_sharing_app.Security.JWT.JwtService;
