@@ -1,5 +1,6 @@
 package com.cerebra.secure_file_sharing_app.Shared;
 
+import com.cerebra.secure_file_sharing_app.Aspects.Sanitization.SanitizedField;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
@@ -16,8 +17,10 @@ public class CreateShareRequest {
     
     @Pattern(regexp = "^\\+?[1-9]\\d{1,14}$|^$", message = "Invalid phone number format")
     @Schema(description = "Recipient phone number (optional)", example = "+1234567890")
+    @SanitizedField
     private String recipientPhone;
     
     @Schema(description = "Optional message to include in SMS", example = "Check out this file!")
+    @SanitizedField
     private String message;
 }
