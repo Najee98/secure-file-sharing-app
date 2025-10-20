@@ -86,6 +86,45 @@ public class SharedLinkController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/public/shared")
+    @Operation(
+            summary = "Download shared file by URL",
+            description = "Download a file using the complete shared URL or just the token."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "File downloaded successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid URL format"),
+            @ApiResponse(responseCode = "404", description = "Invalid or expired share link")
+    })
+    public ResponseEntity<Resource> downloadSharedFileByUrl(
+            @Parameter(description = "Complete shared URL or token", required = true,
+                    example = "http://localhost:8080/public/shared/abc-123-def-456")
+            @RequestParam("url") String shareUrlOrToken) {
+
+        log.info("Public download request by URL: {}", shareUrlOrToken);
+
+        // Extract token from URL or use as token directly
+        String linkToken = extractTokenFromUrl(shareUrlOrToken);
+
+        Resource resource = sharedLinkService.downloadSharedFile(linkToken);
+
+        // Get share details for filename
+        SharedLink sharedLink = sharedLinkService.findByLinkToken(linkToken)
+                .orElseThrow(() -> new RuntimeException("Share not found"));
+
+        String filename = sharedLink.getFile() != null ?
+                sharedLink.getFile().getDisplayName() : "shared-file";
+
+        String mimeType = sharedLink.getFile() != null ?
+                sharedLink.getFile().getMimeType() : MediaType.APPLICATION_OCTET_STREAM_VALUE;
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(mimeType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .body(resource);
+    }
+
+
     @GetMapping("/public/shared/{linkToken}")
     @Operation(
             summary = "Download shared file",
@@ -100,7 +139,7 @@ public class SharedLinkController {
             @Parameter(description = "Share link token", required = true)
             @PathVariable String linkToken) {
 
-        log.info("Public download request for token: {}", linkToken);
+        log.info("Public download request: {}", linkToken);
 
         Resource resource = sharedLinkService.downloadSharedFile(linkToken);
 
@@ -244,4 +283,41 @@ public class SharedLinkController {
                 .createdAt(sharedLink.getCreatedAt())
                 .build();
     }
+
+    private String extractTokenFromUrl(String shareUrl) {
+        if (shareUrl == null || shareUrl.trim().isEmpty()) {
+            throw new IllegalArgumentException("Share URL cannot be empty");
+        }
+
+        // Handle different URL formats:
+        // http://localhost:8080/public/shared/abc-123-def-456
+        // https://yourdomain.com/public/shared/abc-123-def-456
+        // /public/shared/abc-123-def-456
+        // abc-123-def-456 (just the token)
+
+        String url = shareUrl.trim();
+
+        // If it's just a token (UUID format), return as-is
+        if (url.matches("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")) {
+            return url;
+        }
+
+        // Extract token from URL path
+        String[] parts = url.split("/");
+        if (parts.length > 0) {
+            String lastPart = parts[parts.length - 1];
+            // Remove any query parameters
+            if (lastPart.contains("?")) {
+                lastPart = lastPart.split("\\?")[0];
+            }
+
+            // Validate it's a UUID format
+            if (lastPart.matches("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")) {
+                return lastPart;
+            }
+        }
+
+        throw new IllegalArgumentException("Invalid share URL format: " + shareUrl);
+    }
+
 }

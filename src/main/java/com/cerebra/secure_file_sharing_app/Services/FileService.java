@@ -24,4 +24,6 @@ public interface FileService {
     List<File> getUserFiles(Long userId);
     List<File> getFolderFiles(Long folderId, Long userId);
 
+    Resource downloadSharedFile(Long fileId);
+
 }

@@ -202,10 +202,38 @@ public class FileServiceImpl implements FileService {
     public List<File> getFolderFiles(Long folderId, Long userId) {
         log.info("Getting files for folder: {} and user: {}", folderId, userId);
 
-        // Validate folder access
-        validateFolderAccess(folderId, userId);
+        if (userId != null) {
+            // Normal authenticated access with validation
+            validateFolderAccess(folderId, userId);
+        }
 
         return findByFolderId(folderId);
+    }
+
+    @Override
+    public Resource downloadSharedFile(Long fileId) {
+        log.info("Downloading shared file: {}", fileId);
+
+        // Find file (no user validation for shared downloads)
+        File file = findById(fileId)
+                .orElseThrow(() -> new FileNotFoundException("File not found: " + fileId));
+
+        try {
+            Path filePath = Paths.get(file.getPhysicalPath());
+            Resource resource = new UrlResource(filePath.toUri());
+
+            if (resource.exists() && resource.isReadable()) {
+                log.info("Shared file download successful: {}", file.getDisplayName());
+                return resource;
+            } else {
+                log.error("Shared file not found or not readable: {}", file.getPhysicalPath());
+                throw new FileNotFoundException("File not found or not readable");
+            }
+
+        } catch (MalformedURLException e) {
+            log.error("Malformed file path: {}", file.getPhysicalPath(), e);
+            throw new FileStorageException("Invalid file path: " + e.getMessage());
+        }
     }
 
     // Private Helper Methods

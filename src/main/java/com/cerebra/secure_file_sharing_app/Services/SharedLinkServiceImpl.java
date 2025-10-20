@@ -3,6 +3,7 @@ package com.cerebra.secure_file_sharing_app.Services;
 import com.cerebra.secure_file_sharing_app.Entities.File;
 import com.cerebra.secure_file_sharing_app.Entities.Folder;
 import com.cerebra.secure_file_sharing_app.Entities.SharedLink;
+import com.cerebra.secure_file_sharing_app.Entities.StoragePath;
 import com.cerebra.secure_file_sharing_app.Exceptions.CustomExceptions.*;
 import com.cerebra.secure_file_sharing_app.Repositories.SharedLinkRepository;
 import com.cerebra.secure_file_sharing_app.SMS.SMSService;
@@ -17,6 +18,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+import org.springframework.core.io.UrlResource;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -26,6 +36,7 @@ public class SharedLinkServiceImpl implements SharedLinkService {
     private final FileService fileService;
     private final FolderService folderService;
     private final SMSService smsService;
+    private final StoragePathService storagePathService;
 
     @Value("${app.share.expiration-days:7}")
     private int shareExpirationDays;
@@ -124,7 +135,8 @@ public class SharedLinkServiceImpl implements SharedLinkService {
         SharedLink sharedLink = SharedLink.builder()
                 .linkToken(linkToken)
                 .expiresAt(expiresAt)
-                .file(null) // No file for folder shares
+                .file(null)
+                .folder(folder)  // Set folder instead of file
                 .build();
 
         SharedLink savedLink = save(sharedLink);
@@ -140,7 +152,7 @@ public class SharedLinkServiceImpl implements SharedLinkService {
 
     @Override
     public Resource downloadSharedFile(String linkToken) {
-        log.info("Attempting to download shared file with token: {}", linkToken);
+        log.info("Attempting to download shared item with token: {}", linkToken);
 
         // Find and validate share link
         SharedLink sharedLink = findByLinkToken(linkToken)
@@ -152,15 +164,22 @@ public class SharedLinkServiceImpl implements SharedLinkService {
             throw new ShareExpiredException("Share link has expired");
         }
 
-        // Get file from share link
-        File file = sharedLink.getFile();
-        if (file == null) {
-            throw new FileNotFoundException("Shared item is not a file");
-        }
+        // Handle file or folder download
+        if (sharedLink.getFile() != null) {
+            // File sharing - direct download
+            log.info("Downloading shared file: {}", sharedLink.getFile().getDisplayName());
+            return downloadSharedFileResource(sharedLink.getFile());
 
-        // Use FileService to get the resource (bypasses user validation)
-        return getFileResource(file);
+        } else if (sharedLink.getFolder() != null) {
+            // Folder sharing - ZIP download
+            log.info("Downloading shared folder as ZIP: {}", sharedLink.getFolder().getName());
+            return downloadFolderAsZip(sharedLink.getFolder());
+
+        } else {
+            throw new ShareNotFoundException("Invalid share - no file or folder associated");
+        }
     }
+
 
     @Override
     public void revokeShare(Long shareId, Long userId) {
@@ -180,9 +199,22 @@ public class SharedLinkServiceImpl implements SharedLinkService {
 
     @Override
     public List<SharedLink> getUserShares(Long userId) {
-        // This would require adding userId to SharedLink entity or joining through file ownership
-        // For now, returning all shares - should be filtered by file ownership
-        return findAll();
+        // Get user's storage path
+        StoragePath userStoragePath = getUserStoragePath(userId);
+
+        // Find all shares for user's files and folders
+        List<SharedLink> userShares = sharedLinkRepository.findAll().stream()
+                .filter(share -> {
+                    if (share.getFile() != null) {
+                        return share.getFile().getStoragePath().getId().equals(userStoragePath.getId());
+                    } else if (share.getFolder() != null) {
+                        return share.getFolder().getStoragePath().getId().equals(userStoragePath.getId());
+                    }
+                    return false;
+                })
+                .collect(Collectors.toList());
+
+        return userShares;
     }
 
     @Override
@@ -228,9 +260,81 @@ public class SharedLinkServiceImpl implements SharedLinkService {
     private Resource getFileResource(File file) {
         // Direct file access bypassing user validation
         try {
-            return fileService.downloadFile(file.getId(), null); // This needs modification in FileService
+            return fileService.downloadSharedFile(file.getId());
         } catch (Exception e) {
             throw new FileNotFoundException("Cannot access shared file: " + e.getMessage());
         }
+    }
+
+    // New helper methods
+    private Resource downloadSharedFileResource(File file) {
+        return fileService.downloadSharedFile(file.getId());
+    }
+
+    private Resource downloadFolderAsZip(Folder folder) {
+        try {
+            // Get all files in the folder
+            List<File> files = fileService.getFolderFiles(folder.getId(), null); // null userId for shared access
+
+            if (files.isEmpty()) {
+                // Create empty ZIP for empty folders
+                return createEmptyZip(folder.getName());
+            }
+
+            // Create ZIP file with all folder contents
+            return createZipFromFiles(files, folder.getName());
+
+        } catch (Exception e) {
+            log.error("Error creating ZIP for folder {}: {}", folder.getName(), e.getMessage(), e);
+            throw new FileStorageException("Failed to create folder ZIP: " + e.getMessage());
+        }
+    }
+
+    private Resource createZipFromFiles(List<File> files, String folderName) throws IOException {
+        // Create temporary ZIP file
+        Path tempZipPath = Files.createTempFile("shared-folder-", ".zip");
+
+        try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(tempZipPath))) {
+
+            for (File file : files) {
+                // Add file to ZIP
+                ZipEntry zipEntry = new ZipEntry(file.getDisplayName());
+                zipOut.putNextEntry(zipEntry);
+
+                // Copy file content to ZIP
+                Path filePath = Paths.get(file.getPhysicalPath());
+                Files.copy(filePath, zipOut);
+                zipOut.closeEntry();
+            }
+        }
+
+        // Return ZIP file as resource
+        return new UrlResource(tempZipPath.toUri()) {
+            @Override
+            public String getFilename() {
+                return folderName + ".zip";
+            }
+        };
+    }
+
+    private Resource createEmptyZip(String folderName) throws IOException {
+        // Create temporary empty ZIP file
+        Path tempZipPath = Files.createTempFile("empty-folder-", ".zip");
+
+        try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(tempZipPath))) {
+            // Create empty ZIP
+        }
+
+        return new UrlResource(tempZipPath.toUri()) {
+            @Override
+            public String getFilename() {
+                return folderName + "-empty.zip";
+            }
+        };
+    }
+
+    private StoragePath getUserStoragePath(Long userId) {
+        return storagePathService.findByAppUserId(userId)
+                .orElseThrow(() -> new RuntimeException("User storage path not found"));
     }
 }
