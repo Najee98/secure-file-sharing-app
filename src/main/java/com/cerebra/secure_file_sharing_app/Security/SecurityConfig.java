@@ -19,8 +19,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf
-                                .disable() // Disabled for JWT-based API
-                        // Alternative: .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                                .disable()
                 )
                 .cors(cors -> cors.and())
                 .authorizeHttpRequests(auth -> auth
