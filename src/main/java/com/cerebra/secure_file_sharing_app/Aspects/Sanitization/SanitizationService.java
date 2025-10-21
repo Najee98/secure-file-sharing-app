@@ -14,30 +14,27 @@ public class SanitizationService {
      */
     public String sanitizeInput(String input) {
         if (input == null || input.trim().isEmpty()) {
-            return input;
+            return input == null ? null : "";
         }
 
         log.debug("Sanitizing input: {}", input);
 
         String sanitized = input;
 
-        // Remove potential SQL injection patterns
+        // Remove potential SQL injection patterns (case-insensitive)
         sanitized = sanitized.replaceAll("--", "")                     // SQL comments
-                             .replaceAll(";(?=\\s|$)", "")              // Standalone semicolons
-                             .replaceAll("'(?=\\s*(or|and|union|select|drop|insert|update|delete))", "")  // SQL keywords
-                             .replaceAll("\\bunion\\b", "")             // UNION keyword
-                             .replaceAll("\\bselect\\b", "")            // SELECT keyword
-                             .replaceAll("\\bdrop\\b", "")              // DROP keyword
-                             .replaceAll("\\binsert\\b", "")            // INSERT keyword
-                             .replaceAll("\\bupdate\\b", "")            // UPDATE keyword
-                             .replaceAll("\\bdelete\\b", "");           // DELETE keyword
+                .replaceAll("(?i)\\b(union|select|drop|insert|update|delete|from)\\b", "")  // SQL keywords
+                .replaceAll("'(?=\\s*(?i)(or|and|union|select|drop|insert|update|delete))", ""); // SQL injection attempts
 
-        // XSS protection - escape HTML characters
-        sanitized = sanitized.replaceAll("<", "&lt;")
-                             .replaceAll(">", "&gt;")
-                             .replaceAll("\"", "&quot;")
-                             .replaceAll("'", "&#x27;")
-                             .replaceAll("&(?![a-zA-Z]+;)", "&amp;");   // Don't double-encode
+        // XSS protection - escape HTML characters (do ' BEFORE & to avoid double encoding)
+        sanitized = sanitized.replaceAll("'", "&#x27;")               // Do this FIRST
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll("\"", "&quot;")
+                .replaceAll("&(?![a-zA-Z0-9#]+;)", "&amp;");   // Don't double-encode existing entities
+
+        // Remove semicolons ONLY if they're not part of HTML entities
+        sanitized = sanitized.replaceAll("(?<!&[a-zA-Z0-9#]+);", "");  // Remove ; not preceded by HTML entity pattern
 
         // Remove excessive whitespace
         sanitized = sanitized.replaceAll("\\s+", " ").trim();
