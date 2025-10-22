@@ -1,4 +1,4 @@
-package com.cerebra.secure_file_sharing_app.UnitTests.Security;
+package com.cerebra.secure_file_sharing_app.UnitTests.Security.JWT;
 
 import com.cerebra.secure_file_sharing_app.Entities.AppUser;
 import com.cerebra.secure_file_sharing_app.Security.JWT.JwtService;
@@ -23,7 +23,6 @@ import java.util.Date;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("JwtService Tests")

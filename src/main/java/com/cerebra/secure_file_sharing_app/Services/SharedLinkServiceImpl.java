@@ -34,7 +34,7 @@ public class SharedLinkServiceImpl implements SharedLinkService {
     private final SharedLinkRepository sharedLinkRepository;
     private final FileService fileService;
     private final FolderService folderService;
-    private final SMSService smsService;
+    private final HttpSMSService smsService;
     private final StoragePathService storagePathService;
 
     @Value("${app.share.expiration-days:7}")

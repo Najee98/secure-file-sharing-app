@@ -16,7 +16,7 @@ import org.springframework.web.client.RestTemplate;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class HttpSMSServiceImpl implements SMSService {
+public class HttpSMSServiceImpl implements HttpSMSService {
     
     private final RestTemplate restTemplate;
     

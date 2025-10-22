@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class AuthServiceImpl implements AuthService {
     
-    private final SMSService smsService;
+    private final HttpSMSService smsService;
     private final JwtService jwtService;
     private final AppUserService appUserService;
     private final StoragePathService storagePathService;
