@@ -1,4 +1,4 @@
-package com.cerebra.secure_file_sharing_app.Security.Filders;
+package com.cerebra.secure_file_sharing_app.Security.Filters;
 
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletResponse;
