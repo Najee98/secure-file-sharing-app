@@ -12,6 +12,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -119,6 +120,18 @@ public class GlobalExceptionHandler {
                 .path(getPath(request))
                 .timestamp(System.currentTimeMillis())
                 .validationErrors(errors)
+                .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<ErrorResponse> handleMissingRequestPart(MissingServletRequestPartException ex, WebRequest request) {
+        log.warn("Missing request part: {}", ex.getMessage());
+        ErrorResponse error = ErrorResponse.builder()
+                .message("Required file parameter is missing")
+                .status(HttpStatus.BAD_REQUEST.value())
+                .path(getPath(request))
+                .timestamp(System.currentTimeMillis())
                 .build();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
