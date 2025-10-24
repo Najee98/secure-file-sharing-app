@@ -52,6 +52,7 @@ public class File {
     
     @OneToMany(mappedBy = "file", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @ToString.Exclude
+    @JsonIgnore
     private List<SharedLink> sharedLinks;
     
     @PrePersist
