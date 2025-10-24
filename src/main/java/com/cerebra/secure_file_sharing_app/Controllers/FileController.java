@@ -2,6 +2,7 @@ package com.cerebra.secure_file_sharing_app.Controllers;
 
 import com.cerebra.secure_file_sharing_app.Entities.*;
 
+import com.cerebra.secure_file_sharing_app.Security.JWT.JwtService;
 import com.cerebra.secure_file_sharing_app.Services.FileService;
 import com.cerebra.secure_file_sharing_app.Services.StoragePathService;
 import com.cerebra.secure_file_sharing_app.Shared.FileUploadResponse;
@@ -17,6 +18,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,6 +34,8 @@ public class FileController {
 
     private final FileService fileService;
     private final StoragePathService storagePathService;
+    private final JwtService jwtService;
+    private final UserDetailsService userDetailsService;
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
@@ -184,6 +189,48 @@ public class FileController {
         List<File> files = fileService.findRootFiles(storagePathId);
 
         return ResponseEntity.ok(files);
+    }
+
+    @GetMapping("/{fileId}/preview")
+    @Operation(
+            summary = "Preview a file",
+            description = "Stream file content for preview (inline display)"
+    )
+    public ResponseEntity<Resource> previewFile(
+            @PathVariable Long fileId,
+            @RequestParam(value = "token", required = false) String tokenParam,
+            Authentication authentication) {
+
+        log.info("File preview request: {} by user: {}", fileId, authentication != null ? authentication.getName() : "token-based");
+
+        Long userId;
+
+        // If token is provided as query param (for media elements that can't send headers)
+        if (tokenParam != null && authentication == null) {
+            // Validate token and extract user
+            String phoneNumber = jwtService.extractUsername(tokenParam);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(phoneNumber);
+
+            if (!jwtService.isTokenValid(tokenParam, userDetails)) {
+                throw new RuntimeException("Invalid or expired token");
+            }
+
+            // Get user ID from phone number
+            AppUser user = (AppUser) userDetails;
+            userId = user.getId();
+        } else if (authentication != null) {
+            userId = getCurrentUserId(authentication);
+        } else {
+            throw new RuntimeException("Authentication required");
+        }
+
+        Resource resource = fileService.downloadFile(fileId, userId);
+        File fileEntity = fileService.findById(fileId).orElseThrow();
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(fileEntity.getMimeType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + fileEntity.getDisplayName() + "\"")
+                .body(resource);
     }
 
     // Fixed helper methods
