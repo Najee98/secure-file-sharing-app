@@ -251,39 +251,6 @@ public class SharedLinkController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/public/shared/{linkToken}/preview")
-    @Operation(
-            summary = "Preview shared file",
-            description = "Stream shared file for preview without authentication"
-    )
-    public ResponseEntity<Resource> previewSharedFile(@PathVariable String linkToken) {
-
-        log.info("Public preview request for token: {}", linkToken);
-
-        Resource resource = sharedLinkService.downloadSharedFile(linkToken);
-
-        // Get share details
-        SharedLink sharedLink = sharedLinkService.findByLinkToken(linkToken)
-                .orElseThrow(() -> new RuntimeException("Share not found"));
-
-        String filename;
-        String mimeType;
-
-        if (sharedLink.getFile() != null) {
-            filename = sharedLink.getFile().getDisplayName();
-            mimeType = sharedLink.getFile().getMimeType();
-        } else {
-            // Folders can't be previewed
-            throw new RuntimeException("Folder preview not supported");
-        }
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(mimeType))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")  // ← INLINE
-                .body(resource);
-    }
-
-
     // Helper methods
     private Long getCurrentUserId(Authentication authentication) {
         AppUser user = (AppUser) authentication.getPrincipal();
@@ -302,7 +269,7 @@ public class SharedLinkController {
         return ShareResponse.builder()
                 .shareId(sharedLink.getId())
                 .linkToken(sharedLink.getLinkToken())
-                .shareUrl("http://localhost:4200/shared/" + sharedLink.getLinkToken())
+                .shareUrl("http://localhost:8080/public/shared/" + sharedLink.getLinkToken())
                 .itemType(type)
                 .itemName(itemName)
                 .itemId(itemId)
