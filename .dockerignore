@@ -1,0 +1,42 @@
+# Maven build output
+target/
+*.jar
+*.war
+*.ear
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Logs
+*.log
+logs/
+
+# Test files
+src/test/
+
+# Documentation
+README.md
+*.md
+
+# Environment files
+.env
+.env.local
+
+# File storage (don't copy uploaded files into image)
+/app-storage/
+storage/
+uploads/
