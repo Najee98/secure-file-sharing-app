@@ -281,7 +281,7 @@ class FolderOperationsIntegrationTest extends BaseIntegrationTest {
         assertThat(deleteParentResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(folderRepository.findById(parentId)).isEmpty();
     }
-    
+
 
     // ========== Helper Methods ==========
 
