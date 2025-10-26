@@ -20,10 +20,10 @@ public class HttpSMSServiceImpl implements HttpSMSService {
     
     private final RestTemplate restTemplate;
     
-    @Value("${sms.service.url:http://localhost:8081}")
+    @Value("${sms.service.url}")
     private String smsServiceUrl;
     
-    @Value("${sms.service.retry.attempts:3}")
+    @Value("${sms.service.retry.attempts}")
     private int maxRetryAttempts;
     
     @Override
